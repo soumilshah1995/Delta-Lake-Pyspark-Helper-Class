@@ -8,9 +8,9 @@ Delta Lake is the optimized storage layer that provides the foundation for stori
 This Python Class will have you up and running with Delta lakes in no time. There are methods, particularly for beginners, that make it simple to insert update delete into delta lake.
 
 
-
+----------------------------------------------------------------------------------
 ###  Step 1 Install Jar Files
-===========================================================
+
 
 Upload JAR files on S3 Bucket and then add the path in your glue script as shown in image and copy paste the code and make sure to change base s3 path
 
@@ -30,10 +30,8 @@ Go TO Section Python Class and Copy Entire Class
 
 
 
-
+----------------------------------------------------------------------------------
 ###  Step 3 Examples
-===========================================================
-
 
 ```
 from pyspark import SparkConf, SparkContext
