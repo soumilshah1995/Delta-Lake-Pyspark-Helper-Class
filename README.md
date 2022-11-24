@@ -71,11 +71,12 @@ helper.insert_overwrite_records_delta_lake(spark_df=df_write)```
 ##### Appending into Delta Lakes ?
 ```
 data = impleDataUpd = [
-(5, "this is append", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
+    (5, "this is append", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
 ]
 columns = ["emp_id", "employee_name", "department", "state", "salary", "age", "bonus", "ts"]
 df_append = spark.createDataFrame(data=data, schema=columns)
-helper.append_records_delta_lake(spark_df=df_write)```
+helper.append_records_delta_lake(spark_df=df_append)
+
 ```
 
 ##### Updating Item in delta lake 
@@ -103,26 +104,6 @@ helper.generate_manifest_files()
 
 #### Entire Code 
 ```
-
-##### Appending into Delta Lakes ?
-from pyspark import SparkConf, SparkContext
-from awsglue.job import Job
-from awsglue.utils import getResolvedOptions
-from awsglue.dynamicframe import DynamicFrame
-from awsglue.context import GlueContext
-
-# Creating Instance
-# This will be the path where your delta lake already exists or where you want to build one.
-helper = DeltaLakeHelper(delta_lake_path="s3a://glue-learn-begineers/deltalake/delta_table")
-
-args = getResolvedOptions(sys.argv, ["JOB_NAME"])
-spark = helper.spark
-sc = spark.sparkContext
-glueContext = GlueContext(sc)
-job = Job(glueContext)
-job.init(args["JOB_NAME"], args)
-
-
 try:
     import os
     import sys
@@ -296,63 +277,92 @@ class DeltaLakeHelper(object):
         return self.spark
 
 
-# ====================================================
-"""Create Spark Data Frame """
-# ====================================================
-data = impleDataUpd = [
-  (1, "this is inser 1 ", "Sales", "RJ", 81000, 30, 23000, 827307999),
-  (2, "this is inser 2", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
-  (3, "this is inser 3", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
-  (4, "this is inser 3", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
-]
-columns = ["emp_id", "employee_name", "department", "state", "salary", "age", "bonus", "ts"]
-df_write = spark.createDataFrame(data=data, schema=columns)
-helper.insert_overwrite_records_delta_lake(spark_df=df_write)
+def main():
 
-# ====================================================
-"""READ FROM DELTA LAKE  """
-# ====================================================
-df_read = helper.read_delta_lake()
-print("READ", df_read.show())
+    try:
+        from awsglue.job import Job
+        from awsglue.utils import getResolvedOptions
+        from awsglue.dynamicframe import DynamicFrame
+        from awsglue.context import GlueContext
+    except Exception as e:pass
 
-# ====================================================
-"""UPDATE DELTA LAKE"""
-# ====================================================
-helper.update_records_delta_lake(condition="emp_id = '3'",
-                               value_to_set={"employee_name": "'THIS WAS UPDATE ON DELTA LAKE'"})
+    helper = DeltaLakeHelper(delta_lake_path="s3a://glue-learn-begineers/deltalake/delta_table")
 
-# ====================================================
-""" DELETE DELTA LAKE"""
-# ====================================================
-helper.delete_records_delta_lake(condition="emp_id = '4'")
+    args = getResolvedOptions(sys.argv, ["JOB_NAME"])
+    spark = helper.spark
+    sc = spark.sparkContext
+    glueContext = GlueContext(sc)
+    job = Job(glueContext)
+    job.init(args["JOB_NAME"], args)
 
-# ====================================================
-""" FIND ONE AND UPDATE OR UPSERT DELTA LAKE """
-# ====================================================
-new_data = [
-  (2, "this is update on delta lake ", "Sales", "RJ", 81000, 30, 23000, 827307999),
-  (11, "This should be append ", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
-]
+    # ====================================================
+    """Create Spark Data Frame """
+    # ====================================================
+    data = impleDataUpd = [
+        (1, "this is inser 1 ", "Sales", "RJ", 81000, 30, 23000, 827307999),
+        (2, "this is inser 2", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
+        (3, "this is inser 3", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
+        (4, "this is inser 3", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
+    ]
+    columns = ["emp_id", "employee_name", "department", "state", "salary", "age", "bonus", "ts"]
+    df_write = spark.createDataFrame(data=data, schema=columns)
+    helper.insert_overwrite_records_delta_lake(spark_df=df_write)
 
-columns = ["emp_id", "employee_name", "department", "state", "salary", "age", "bonus", "ts"]
-usr_up_df = spark.createDataFrame(data=new_data, schema=columns)
+    # ====================================================
+    """Appending  """
+    # ====================================================
+    data = impleDataUpd = [
+        (5, "this is append", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
+    ]
+    columns = ["emp_id", "employee_name", "department", "state", "salary", "age", "bonus", "ts"]
+    df_append = spark.createDataFrame(data=data, schema=columns)
+    helper.append_records_delta_lake(spark_df=df_append)
 
-helper.upsert_records_delta_lake(old_data_key='emp_id',
-                               new_data_key='emp_id',
-                               new_spark_df=usr_up_df)
 
-# ====================================================
-""" Compaction DELTA Prune Older Version and Create larger Files """
-# ====================================================
-helper.compact_table(num_of_files=2)
-helper.delete_older_files_versions()
+    # ====================================================
+    """READ FROM DELTA LAKE  """
+    # ====================================================
+    df_read = helper.read_delta_lake()
+    print("READ", df_read.show())
 
-# ====================================================
-""" Create Manifest File for Athena """
-# ====================================================
-helper.generate_manifest_files()
+    # ====================================================
+    """UPDATE DELTA LAKE"""
+    # ====================================================
+    helper.update_records_delta_lake(condition="emp_id = '3'",
+                                     value_to_set={"employee_name": "'THIS WAS UPDATE ON DELTA LAKE'"})
 
-job.commit()
+    # ====================================================
+    """ DELETE DELTA LAKE"""
+    # ====================================================
+    helper.delete_records_delta_lake(condition="emp_id = '4'")
+
+    # ====================================================
+    """ FIND ONE AND UPDATE OR UPSERT DELTA LAKE """
+    # ====================================================
+    new_data = [
+        (2, "this is update on delta lake ", "Sales", "RJ", 81000, 30, 23000, 827307999),
+        (11, "This should be append ", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
+    ]
+
+    columns = ["emp_id", "employee_name", "department", "state", "salary", "age", "bonus", "ts"]
+    usr_up_df = spark.createDataFrame(data=new_data, schema=columns)
+
+    helper.upsert_records_delta_lake(old_data_key='emp_id',
+                                     new_data_key='emp_id',
+                                     new_spark_df=usr_up_df)
+
+    # ====================================================
+    """ Compaction DELTA Prune Older Version and Create larger Files """
+    # ====================================================
+    helper.compact_table(num_of_files=2)
+    helper.delete_older_files_versions()
+
+    # ====================================================
+    """ Create Manifest File for Athena """
+    # ====================================================
+    helper.generate_manifest_files()
+
+    job.commit()
 
 ```
 
