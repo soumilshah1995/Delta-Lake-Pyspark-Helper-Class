@@ -32,9 +32,79 @@ Go TO Section Python Class and Copy Entire Class
 
 
 ----------------------------------------------------------------------------------
-###  Step 3 Examples
+### Examples
+
+##### Define your imports 
+```
+from pyspark import SparkConf, SparkContext
+from awsglue.job import Job
+from awsglue.utils import getResolvedOptions
+from awsglue.dynamicframe import DynamicFrame
+from awsglue.context import GlueContext
+
+args = getResolvedOptions(sys.argv, ["JOB_NAME"])
+spark = helper.spark
+sc = spark.sparkContext
+glueContext = GlueContext(sc)
+job = Job(glueContext)
+job.init(args["JOB_NAME"], args)
 
 ```
+##### Create instance and Provide your Delta Lake Path
+```
+helper = DeltaLakeHelper(delta_lake_path="s3a://glue-learn-begineers/deltalake/delta_table")
+```
+
+##### Adding Some Dummy data into Delta lake 
+```
+data = impleDataUpd = [
+  (1, "this is inser 1 ", "Sales", "RJ", 81000, 30, 23000, 827307999),
+  (2, "this is inser 2", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
+  (3, "this is inser 3", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
+  (4, "this is inser 3", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
+]
+columns = ["emp_id", "employee_name", "department", "state", "salary", "age", "bonus", "ts"]
+df_write = spark.createDataFrame(data=data, schema=columns)
+helper.insert_overwrite_records_delta_lake(spark_df=df_write)```
+```
+
+##### Appending into Delta Lakes ?
+```
+data = impleDataUpd = [
+(5, "this is append", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
+]
+columns = ["emp_id", "employee_name", "department", "state", "salary", "age", "bonus", "ts"]
+df_append = spark.createDataFrame(data=data, schema=columns)
+helper.append_records_delta_lake(spark_df=df_write)```
+```
+
+##### Updating Item in delta lake 
+```
+helper.update_records_delta_lake(condition="emp_id = '3'",
+    value_to_set={"employee_name": "'THIS WAS UPDATE ON DELTA LAKE'"})
+
+```
+
+##### Deleting Items On Delta Lake based on Condition
+```
+helper.delete_records_delta_lake(condition="emp_id = '4'")
+```
+
+##### Convert smaller Parquert files into larger parquet files and delete older version 
+```
+helper.compact_table(num_of_files=2)
+helper.delete_older_files_versions()
+```
+
+##### Generate Manifest File for Athena ?
+```
+helper.generate_manifest_files()
+```
+
+#### Entire Code 
+```
+
+##### Appending into Delta Lakes ?
 from pyspark import SparkConf, SparkContext
 from awsglue.job import Job
 from awsglue.utils import getResolvedOptions
