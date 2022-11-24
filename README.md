@@ -13,6 +13,8 @@ This Python Class will have you up and running with Delta lakes in no time. Ther
 ===========================================================
 
 Upload JAR files on S3 Bucket and then add the path in your glue script as shown in image and copy paste the code and make sure to change base s3 path
+
+
 `Link https://repo1.maven.org/maven2/io/delta/delta-core_2.12/1.0.0/delta-core_2.12-1.0.0.jar`_
 
 
