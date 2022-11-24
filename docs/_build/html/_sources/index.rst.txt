@@ -72,7 +72,9 @@ Step 3 Examples
            (1, "this is inser 1 ", "Sales", "RJ", 81000, 30, 23000, 827307999),
            (2, "this is inser 2", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
            (3, "this is inser 3", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
-       ]
+           (4, "this is inser 3", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
+         ]
+
        columns = ["emp_id", "employee_name", "department", "state", "salary", "age", "bonus", "ts"]
        df_write = spark.createDataFrame(data=data, schema=columns)
        helper.insert_overwrite_records_delta_lake(spark_df=df_write)
@@ -82,6 +84,16 @@ Step 3 Examples
        # ====================================================
        df_read = helper.read_delta_lake()
        print("READ", df_read.show())
+
+       #====================================================
+       """Appending  """
+       # ====================================================
+       data = impleDataUpd = [
+           (5, "this is append", "Engineering", "RJ", 79000, 53, 15000, 1627694678),
+       ]
+       columns = ["emp_id", "employee_name", "department", "state", "salary", "age", "bonus", "ts"]
+       df_append = spark.createDataFrame(data=data, schema=columns)
+       helper.append_records_delta_lake(spark_df=df_append)
 
        # ====================================================
        """UPDATE DELTA LAKE"""
