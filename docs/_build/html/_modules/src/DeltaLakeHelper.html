@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.DeltaLakeHelper &mdash; Delta Lake Pyspark Helper Class 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Delta Lake Pyspark Helper Class
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Delta Lake Pyspark Helper Class</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.DeltaLakeHelper</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.DeltaLakeHelper</h1><div class="highlight"><pre>
+<span></span><span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+
+    <span class="kn">import</span> <span class="nn">pyspark</span>
+    <span class="kn">from</span> <span class="nn">pyspark</span> <span class="kn">import</span> <span class="n">SparkConf</span><span class="p">,</span> <span class="n">SparkContext</span>
+    <span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
+    <span class="kn">from</span> <span class="nn">pyspark.sql.functions</span> <span class="kn">import</span> <span class="n">col</span><span class="p">,</span> <span class="n">asc</span><span class="p">,</span> <span class="n">desc</span>
+    <span class="kn">from</span> <span class="nn">pyspark.sql.functions</span> <span class="kn">import</span> <span class="o">*</span>
+    <span class="kn">from</span> <span class="nn">delta.tables</span> <span class="kn">import</span> <span class="o">*</span>
+    <span class="kn">from</span> <span class="nn">delta.tables</span> <span class="kn">import</span> <span class="n">DeltaTable</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;All modules are loaded .....&quot;</span><span class="p">)</span>
+
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Some modules are missing </span><span class="si">{}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="DeltaLakeHelper"><a class="viewcode-back" href="../../index.html#src.DeltaLakeHelper.DeltaLakeHelper">[docs]</a><span class="k">class</span> <span class="nc">DeltaLakeHelper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Delta Lakes Python helper class that aids in basic operations such as inserting, updating, deleting, merging, removing older files and versions, and generating Athena manifest files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delta_lake_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spark</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__create_spark_session</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delta_lake_path</span> <span class="o">=</span> <span class="n">delta_lake_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delta_df</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="DeltaLakeHelper.generate_manifest_files"><a class="viewcode-back" href="../../index.html#src.DeltaLakeHelper.DeltaLakeHelper.generate_manifest_files">[docs]</a>    <span class="k">def</span> <span class="nf">generate_manifest_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Generates Manifest file for Athena</span>
+
+<span class="sd">        :return: Bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delta_df</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="s2">&quot;symlink_format_manifest&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="nf">__generate_delta_df</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_df</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">delta_df</span> <span class="o">=</span> <span class="n">DeltaTable</span><span class="o">.</span><span class="n">forPath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta_lake_path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+<div class="viewcode-block" id="DeltaLakeHelper.compact_table"><a class="viewcode-back" href="../../index.html#src.DeltaLakeHelper.DeltaLakeHelper.compact_table">[docs]</a>    <span class="k">def</span> <span class="nf">compact_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_of_files</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Converts smaller parquert files into larger Files</span>
+
+<span class="sd">        :param num_of_files: Int</span>
+<span class="sd">        :return: Bool</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">df_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;delta&quot;</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_lake_path</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="n">num_of_files</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;dataChange&quot;</span><span class="p">,</span> <span class="s2">&quot;false&quot;</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;delta&quot;</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s2">&quot;overwrite&quot;</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_lake_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="DeltaLakeHelper.delete_older_files_versions"><a class="viewcode-back" href="../../index.html#src.DeltaLakeHelper.DeltaLakeHelper.delete_older_files_versions">[docs]</a>    <span class="k">def</span> <span class="nf">delete_older_files_versions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Deletes Older Version and calls vacuum(0)</span>
+
+<span class="sd">        :return: Bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__generate_delta_df</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delta_df</span><span class="o">.</span><span class="n">vacuum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="DeltaLakeHelper.insert_overwrite_records_delta_lake"><a class="viewcode-back" href="../../index.html#src.DeltaLakeHelper.DeltaLakeHelper.insert_overwrite_records_delta_lake">[docs]</a>    <span class="k">def</span> <span class="nf">insert_overwrite_records_delta_lake</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spark_df</span><span class="p">,</span> <span class="n">max_record_per_file</span><span class="o">=</span><span class="s1">&#39;10000&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Inserts into Delta Lake</span>
+
+<span class="sd">        :param spark_df: Pyspark Dataframe</span>
+<span class="sd">        :param max_record_per_file: str ie max_record_per_file= &quot;10000&quot;</span>
+<span class="sd">        :return:Bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">spark_df</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;delta&quot;</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s2">&quot;overwrite&quot;</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;maxRecordsPerFile&quot;</span><span class="p">,</span> <span class="n">max_record_per_file</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_lake_path</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="DeltaLakeHelper.append_records_delta_lake"><a class="viewcode-back" href="../../index.html#src.DeltaLakeHelper.DeltaLakeHelper.append_records_delta_lake">[docs]</a>    <span class="k">def</span> <span class="nf">append_records_delta_lake</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spark_df</span><span class="p">,</span> <span class="n">max_record_per_file</span><span class="o">=</span><span class="s2">&quot;10000&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Append data into Delta lakes</span>
+
+<span class="sd">        :param spark_df: Pyspark Dataframe</span>
+<span class="sd">        :param max_record_per_file: str ie max_record_per_file= &quot;10000&quot;</span>
+<span class="sd">        :return: Bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">spark_df</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;delta&quot;</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s1">&#39;append&#39;</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;maxRecordsPerFile&quot;</span><span class="p">,</span> <span class="n">max_record_per_file</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_lake_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="DeltaLakeHelper.update_records_delta_lake"><a class="viewcode-back" href="../../index.html#src.DeltaLakeHelper.DeltaLakeHelper.update_records_delta_lake">[docs]</a>    <span class="k">def</span> <span class="nf">update_records_delta_lake</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">value_to_set</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Set the value on delta lake</span>
+
+<span class="sd">        :param condition : Str Example:  condition=&quot;emp_id = &#39;3&#39;&quot;</span>
+<span class="sd">        :param value_to_set: Dict IE  value_to_set={&quot;employee_name&quot;: &quot;&#39;THIS WAS UPDATE ON DELTA LAKE&#39;&quot;}</span>
+<span class="sd">        :return: Bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__generate_delta_df</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delta_df</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">value_to_set</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="DeltaLakeHelper.upsert_records_delta_lake"><a class="viewcode-back" href="../../index.html#src.DeltaLakeHelper.DeltaLakeHelper.upsert_records_delta_lake">[docs]</a>    <span class="k">def</span> <span class="nf">upsert_records_delta_lake</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old_data_key</span><span class="p">,</span> <span class="n">new_data_key</span><span class="p">,</span> <span class="n">new_spark_df</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Find one and update into delta lake</span>
+<span class="sd">        If records is found it will update if not it will insert into delta lakes</span>
+<span class="sd">        See Examples on How to use this</span>
+
+<span class="sd">        :param old_data_key: Key is nothing but Column on which you want to merge or upsert data into delta lake</span>
+<span class="sd">        :param new_data_key: Key is nothing but Column on which you want to merge or upsert data into delta lake</span>
+<span class="sd">        :param new_spark_df: Spark DataFrame</span>
+<span class="sd">        :return: Bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__generate_delta_df</span><span class="p">()</span>
+        <span class="n">dfUpdates</span> <span class="o">=</span> <span class="n">new_spark_df</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">delta_df</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;oldData&#39;</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">dfUpdates</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;newData&#39;</span><span class="p">),</span> <span class="sa">f</span><span class="s1">&#39;oldData.</span><span class="si">{</span><span class="n">old_data_key</span><span class="si">}</span><span class="s1"> = newData.</span><span class="si">{</span><span class="n">new_data_key</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">whenMatchedUpdateAll</span><span class="p">()</span> \
+            <span class="o">.</span><span class="n">whenNotMatchedInsertAll</span><span class="p">()</span> \
+            <span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="DeltaLakeHelper.delete_records_delta_lake"><a class="viewcode-back" href="../../index.html#src.DeltaLakeHelper.DeltaLakeHelper.delete_records_delta_lake">[docs]</a>    <span class="k">def</span> <span class="nf">delete_records_delta_lake</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Set the value on delta lake</span>
+
+<span class="sd">        :param condition:Str IE condition=&quot;emp_id = &#39;4&#39;&quot;</span>
+<span class="sd">        :return:Bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__generate_delta_df</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delta_df</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="DeltaLakeHelper.read_delta_lake"><a class="viewcode-back" href="../../index.html#src.DeltaLakeHelper.DeltaLakeHelper.read_delta_lake">[docs]</a>    <span class="k">def</span> <span class="nf">read_delta_lake</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Reads from Delta lakes</span>
+
+<span class="sd">        :return: Spark DF</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">df_read</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;delta&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delta_lake_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df_read</span></div>
+
+    <span class="k">def</span> <span class="nf">__create_spark_session</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span> \
+            <span class="o">.</span><span class="n">builder</span> \
+            <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s2">&quot;spark.sql.extensions&quot;</span><span class="p">,</span> <span class="s2">&quot;io.delta.sql.DeltaSparkSessionExtension&quot;</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s2">&quot;spark.databricks.delta.retentionDurationCheck.enabled&quot;</span><span class="p">,</span> <span class="s2">&quot;false&quot;</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">config</span><span class="p">(</span><span class="s2">&quot;spark.sql.catalog.spark_catalog&quot;</span><span class="p">,</span> <span class="s2">&quot;org.apache.spark.sql.delta.catalog.DeltaCatalog&quot;</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">getOrCreate</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, Soumil Shah.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
