@@ -6,7 +6,10 @@ Delta Lake is the optimized storage layer that provides the foundation for stori
 
 
 
-# Documentation :http://delta-lake-helper-class.s3-website-us-east-1.amazonaws.com/ 
+* Documentation :http://delta-lake-helper-class.s3-website-us-east-1.amazonaws.com/ 
+
+
+
 
 This Python Class will have you up and running with Delta lakes in no time. There are methods, particularly for beginners, that make it simple to insert update delete into delta lake.
 
